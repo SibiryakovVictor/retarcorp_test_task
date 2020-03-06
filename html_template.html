@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title></title>
+</head>
+<body id="bodyId" >
+
+  
+</body>
+
+<script>
+
+    /** 
+     * случайно сгенерированные адреса для AJAX-запросов
+     * плюс внутри коллбека сервера проверяется метод html-запроса
+     * всё это для того, чтобы при запросе на любой URL этого сервера 
+     * отдавалась одна страница, в которой будут выведены результаты выполнения задачи
+    */
+    const addrListSortedState = '/tFvhyJE73F9Y7if';
+    const addrTableNoMicro = '/B5nY6phk2AEcE2R';
+
+    
+    let divList = document.createElement( "div" );
+    const divListName = 'listSortedState';
+    divList.setAttribute( 'id', divListName );
+    document.getElementById( "bodyId" ).appendChild( divList );
+
+    makeHeader( "Список адресов пивоварен по штатам", divListName );
+    // AJAX-запрос для получения списка адресов пивоварен по штатам
+    processBreweries( addrListSortedState, printListBreweries, divListName );
+
+    let divTable = document.createElement( "div" );
+    const divTableName = 'tableNoMicro';
+    divTable.setAttribute( 'id', divTableName );
+    document.getElementById( "bodyId" ).appendChild( divTable );
+
+    makeHeader( "Таблица пивоварен без микропивоварен", divTableName  );
+    // AJAX-запрос для получения списка всех пивоварен, кроме микропивоварен 
+    processBreweries( addrTableNoMicro, printTableBreweries, divTableName );
+
+    /**
+     * Запуск сервера, который отвечает 
+     * html-страницей с решением 
+     * запрашиваемыми данными о пивоварнях
+     * 
+     * @param {string} addr Адрес, на который нужно послать AJAX-запрос
+     * @param {callback} handler Коллбек, который будет применен к полученным данным
+     * @param {string} parrentId HTML-элемент, к которому нужно прикрепить полученные данные
+     * после обработки
+     */
+    function processBreweries( addr, handler, parrentId ) {
+
+        let xhr = new XMLHttpRequest();
+
+        xhr.open( "POST", addr, true );
+
+        xhr.setRequestHeader( 'Content-Type', 'application/json' );
+
+        xhr.onreadystatechange = function() {
+
+            if ( ( xhr.readyState === XMLHttpRequest.DONE ) && ( xhr.status === 200 ) ) {
+
+                let breweries = JSON.parse( xhr.responseText );
+
+                handler( breweries, parrentId );
+            }
+
+        }
+
+        xhr.send();
+    };
+
+    function printListBreweries( list, parrentId ) {
+
+        for ( let [ state, breweries ] of Object.entries( list ) ) {
+
+            let stateHeader = document.createElement( "h3" );
+            stateHeader.textContent = state;
+            document.getElementById( parrentId ).appendChild( stateHeader );
+
+            let createdList = document.createElement( "ul" );
+            document.getElementById( parrentId ).appendChild( createdList );
+
+            for ( let breweryAddress of breweries ) {
+
+                let li = document.createElement( "li" );
+                li.textContent = breweryAddress;
+                createdList.appendChild( li );
+
+            }
+        }
+    }
+
+    function printTableBreweries( list, parrentId ) {
+
+        let table = document.createElement( "table" );
+        table.setAttribute( 'border', '1' );
+        document.getElementById( parrentId ).appendChild( table );
+
+        let tableRolHeader = document.createElement( "tr" );
+        table.appendChild( tableRolHeader );
+
+        let tableHeaders = [
+            'Id', 'Name', 'Address', 'Phone', 'Website'
+        ];
+
+        for ( let header of tableHeaders ) {
+            let tableHeader = document.createElement( "th" );
+            tableHeader.textContent = header;
+            tableRolHeader.appendChild( tableHeader );
+        }
+
+        let keys = [
+            'id', 'name', 'address', 'phone', 'website_url'
+        ];
+
+        for ( let brewery of Object.values( list ) ) {
+            let tableRolData = document.createElement( "tr" );
+            table.appendChild( tableRolData );
+
+            for ( let key of keys ) {
+
+                let tableColData = document.createElement( "td" );
+                tableColData.textContent = brewery[ key ];
+                tableRolData.appendChild( tableColData );
+            }
+
+        }
+
+    }
+
+    function makeHeader( content, id ) {
+        let header = document.createElement( "h2" );
+        header.textContent = content;
+        document.getElementById( id ).appendChild( header );
+    }
+
+</script>
+</html>
